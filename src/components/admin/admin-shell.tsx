@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -53,9 +53,6 @@ export function AdminShell({ admin, children }: AdminShellProps) {
 	const pathname = usePathname();
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-	useEffect(() => {
-		setMobileMenuOpen(false);
-	}, [pathname]);
 
 	const pageTitle = pageTitles[pathname] ?? "Administração";
 
@@ -128,6 +125,7 @@ export function AdminShell({ admin, children }: AdminShellProps) {
 							<Link
 								key={item.href}
 								href={item.href}
+								onClick={() => setMobileMenuOpen(false)}
 								className={cn(
 									"flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
 									active
