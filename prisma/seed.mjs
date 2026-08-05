@@ -69,7 +69,7 @@ async function seedAdmin() {
 	const password = getRequiredEnv("ADMIN_PASSWORD");
 	const name = process.env.ADMIN_NAME?.trim() || "Felipe Micheletti";
 
-	if (password.length < 12) throw new Error("ADMIN_PASSWORD must contain at least 12 characters.");
+	if (password.length < 10) throw new Error("ADMIN_PASSWORD must contain at least 10 characters.");
 
 	const passwordHash = await bcrypt.hash(password, 12);
 
