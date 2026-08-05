@@ -138,7 +138,13 @@ async function seedTechnologies() {
 			throw new Error(`Category not found for technology: ${technology.name}`);
 		}
 
-		const { categorySlug: _categorySlug, ...technologyData } = technology;
+		const technologyData = {
+			name: technology.name,
+			slug: technology.slug,
+			iconKey: technology.iconKey,
+			color: technology.color,
+			sortOrder: technology.sortOrder,
+		};
 
 		await prisma.technology.upsert({
 			where: { slug: technology.slug },
