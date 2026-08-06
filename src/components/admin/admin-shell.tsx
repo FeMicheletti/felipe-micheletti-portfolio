@@ -19,7 +19,7 @@ type AdminShellProps = {
 
 const navigation = [
 	{ label: "Dashboard", href: "/admin", icon: Gauge, available: true },
-	{ label: "Projetos", href: "/admin/projetos", icon: BriefcaseBusiness, available: false },
+	{ label: "Projetos", href: "/admin/projetos", icon: BriefcaseBusiness, available: true },
 	{ label: "Stacks", href: "/admin/stacks", icon: Layers3, available: false },
 	{ label: "Mídia", href: "/admin/midia", icon: Image, available: false },
 	{ label: "Métricas", href: "/admin/metricas", icon: BarChart3, available: false },
@@ -39,10 +39,10 @@ export function AdminShell({ admin, children }: AdminShellProps) {
 	const pathname = usePathname();
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-	const pageTitle = pageTitles[pathname] ?? "Administração";
+	const pageTitle = pathname === "/admin/projetos/novo" ? "Novo projeto" : pathname.startsWith("/admin/projetos/") ? "Editar projeto" : pageTitles[pathname] ?? "Administração";
 
 	return (
-		<div className="min-h-screen bg-zinc-950 text-zinc-100">
+		<div className="dark scheme-dark min-h-screen bg-zinc-950 text-zinc-100">
 			{mobileMenuOpen ? (
 				<button type="button" aria-label="Fechar menu" className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden" onClick={() => setMobileMenuOpen(false)}/>
 			) : null}
