@@ -54,7 +54,7 @@ export function AdminShell({ admin, children }: AdminShellProps) {
 							<Code2 className="size-5" />
 						</span>
 						<span>
-							<span className="block text-sm font-semibold tracking-wide">Felipe.dev</span>
+							<span className="block text-sm font-semibold tracking-wide">Felipe Micheletti</span>
 							<span className="block text-xs text-zinc-500">Portfolio CMS</span>
 						</span>
 					</Link>
