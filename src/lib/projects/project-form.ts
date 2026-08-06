@@ -10,6 +10,13 @@ const optionalDate = z.union([
 	z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida."),
 ]);
 
+const projectMediaSchema = z.object({
+	mediaId: z.string().trim().min(1),
+	role: z.enum(["COVER", "GALLERY"]),
+	altPt: z.string().trim().max(255, "O texto alternativo deve ter no máximo 255 caracteres."),
+	altEn: z.string().trim().max(255, "O texto alternativo deve ter no máximo 255 caracteres."),
+});
+
 export const projectFormSchema = z.object({
 	slug: z.string()
 		.trim()
@@ -47,7 +54,8 @@ export const projectFormSchema = z.object({
     responsibilitiesEn: z.string().trim(),
     technicalChoicesEn: z.string().trim(),
     resultsEn: z.string().trim(),
-	technologyIds: z.array(z.string().trim().min(1)).max(50, "Selecione no máximo 50 tecnologias.")
+	technologyIds: z.array(z.string().trim().min(1)).max(50, "Selecione no máximo 50 tecnologias."),
+	projectMedia: z.array(projectMediaSchema).max(30, "Selecione no máximo 30 imagens.")
 }).superRefine((data, context) => {
     if (data.startedAt && data.finishedAt && data.finishedAt < data.startedAt) {
 		context.addIssue({
@@ -56,12 +64,31 @@ export const projectFormSchema = z.object({
 			message: "A conclusão não pode ser anterior ao início."
 		});
     }
+
+	const mediaIds = data.projectMedia.map(({ mediaId }) => mediaId);
+	if (new Set(mediaIds).size !== mediaIds.length) {
+		context.addIssue({
+			code: "custom",
+			path: ["projectMedia"],
+			message: "Uma mesma imagem não pode ser vinculada mais de uma vez."
+		});
+	}
+
+	if (data.projectMedia.filter(({ role }) => role === "COVER").length > 1) {
+		context.addIssue({
+			code: "custom",
+			path: ["projectMedia"],
+			message: "Selecione apenas uma imagem de capa."
+		});
+	}
 });
 
 export type ProjectFormState = {
 	error?: string;
 	fieldErrors?: Record<string, string[]>;
 };
+
+export type ProjectMediaFormValue = z.infer<typeof projectMediaSchema>;
 
 export type ProjectFormValues = {
 	id?: string;
@@ -88,4 +115,5 @@ export type ProjectFormValues = {
 	technicalChoicesEn: string;
 	resultsEn: string;
 	technologyIds: string[];
+	projectMedia: ProjectMediaFormValue[];
 };

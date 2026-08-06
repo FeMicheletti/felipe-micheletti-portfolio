@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ProjectFormState, ProjectFormValues } from "@/lib/projects/project-form";
 import { createProjectAction, updateProjectAction } from "@/app/admin/(protected)/projetos/actions";
 import { ProjectSubmitButton } from "./project-submit-button";
+import { ProjectMediaFields, type ProjectMediaOption } from "./project-media-fields";
 
 const initialState: ProjectFormState = {};
 
@@ -114,7 +115,7 @@ function ContentFields({ locale, values, errors, onValueChange }: { locale: "Pt"
 	);
 }
 
-export function ProjectForm({ values, technologyCategories }: { values: ProjectFormValues; technologyCategories: TechnologyCategoryOption[] }) {
+export function ProjectForm({ values, technologyCategories, mediaAssets }: { values: ProjectFormValues; technologyCategories: TechnologyCategoryOption[]; mediaAssets: ProjectMediaOption[] }) {
 	const editing = Boolean(values.id);
 	const action = values.id ? updateProjectAction.bind(null, values.id) : createProjectAction;
 	const [state, formAction] = useActionState(action, initialState);
@@ -144,6 +145,10 @@ export function ProjectForm({ values, technologyCategories }: { values: ProjectF
 		setFormValues((current) => ({ ...current, [name]: value }));
 	}
 
+	function setProjectMedia(projectMedia: ProjectFormValues["projectMedia"]) {
+		setFormValues((current) => ({ ...current, projectMedia }));
+	}
+
 	return (
 		<form action={formAction} className="space-y-6">
 			{state.error ? (
@@ -154,7 +159,8 @@ export function ProjectForm({ values, technologyCategories }: { values: ProjectF
 			) : null}
 
 			<div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-				<Card className="border-violet-500/10 bg-zinc-900/70 shadow-lg shadow-black/10 ring-0">
+				<div className="space-y-6">
+					<Card className="border-violet-500/10 bg-zinc-900/70 shadow-lg shadow-black/10 ring-0">
 					<CardHeader className="border-b border-white/5">
 						<div className="flex items-center gap-2 text-violet-300">
 							<Languages className="size-4" />
@@ -184,7 +190,15 @@ export function ProjectForm({ values, technologyCategories }: { values: ProjectF
 							</TabsContent>
 						</Tabs>
 					</CardContent>
-				</Card>
+					</Card>
+
+					<ProjectMediaFields
+						mediaAssets={mediaAssets}
+						value={formValues.projectMedia}
+						errors={state.fieldErrors?.projectMedia}
+						onChange={setProjectMedia}
+					/>
+				</div>
 
 				<div className="space-y-6">
 					<Card className="border-violet-500/10 bg-zinc-900/70 shadow-lg shadow-black/10 ring-0">
@@ -412,7 +426,7 @@ export function ProjectFormHeading({ editing }: { editing: boolean }) {
 					{editing ? "Editar projeto" : "Novo projeto"}
 				</h2>
 				<p className="mt-1 text-sm text-zinc-500">
-					{editing ? "Atualize o conteúdo e as opções de publicação." : "Cadastre o conteúdo principal; imagens e stacks serão vinculadas depois."}
+					{editing ? "Atualize o conteúdo e as opções de publicação." : "Cadastre o conteúdo, as stacks e as imagens do projeto."}
 				</p>
 			</div>
 		</div>
