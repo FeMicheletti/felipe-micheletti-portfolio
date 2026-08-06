@@ -112,6 +112,7 @@ export function ProjectForm({ values }: { values: ProjectFormValues }) {
 	);
 
 	function setField(name: string, value: string | boolean) {
+		if (name === "sortOrder") value = String(Math.max(0, Number(value)));
 		setFormValues((current) => ({ ...current, [name]: value }));
 	}
 

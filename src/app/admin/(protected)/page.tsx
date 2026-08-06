@@ -83,8 +83,7 @@ export default async function AdminPage() {
 						Seu portfólio em um só lugar
 					</h2>
 					<p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-						Acompanhe o conteúdo e, nas próximas etapas, as interações de quem
-						visita seu trabalho.
+						Acompanhe o conteúdo e, nas próximas etapas, as interações de quem visita seu trabalho.
 					</p>
 				</div>
 
@@ -169,7 +168,7 @@ export default async function AdminPage() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
-						{["Gerenciamento de projetos", "Gerenciamento de stacks", "Upload pela API OneDrive", "Coleta e gráficos de métricas"].map((step, index) => (
+						{["Gerenciamento de stacks", "Vínculo das stacks aos projetos", "Upload pela API OneDrive", "Coleta e gráficos de métricas"].map((step, index) => (
 							<div key={step} className="flex items-center gap-3">
 								<span className={index === 0 ? "flex size-7 items-center justify-center rounded-full bg-violet-600 text-white" : "flex size-7 items-center justify-center rounded-full bg-white/5 text-zinc-600"}>
 									{index === 0 ? (
