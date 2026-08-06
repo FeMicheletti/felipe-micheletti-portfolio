@@ -18,6 +18,14 @@ function optionalDate(input: string) {
 	return input ? new Date(`${input}T00:00:00.000Z`) : null;
 }
 
+function jsonValue(formData: FormData, key: string) {
+	try {
+		return JSON.parse(value(formData, key));
+	} catch {
+		return null;
+	}
+}
+
 function parseProjectForm(formData: FormData) {
 	return projectFormSchema.safeParse({
 		slug: value(formData, "slug"),
@@ -42,7 +50,8 @@ function parseProjectForm(formData: FormData) {
 		responsibilitiesEn: value(formData, "responsibilitiesEn"),
 		technicalChoicesEn: value(formData, "technicalChoicesEn"),
 		resultsEn: value(formData, "resultsEn"),
-		technologyIds: [...new Set(formData.getAll("technologyIds").map(String))]
+		technologyIds: [...new Set(formData.getAll("technologyIds").map(String))],
+		projectMedia: jsonValue(formData, "projectMedia")
 	});
 }
 
@@ -71,8 +80,30 @@ async function technologyIdsExist(technologyIds: string[]) {
 	return count === technologyIds.length;
 }
 
+async function mediaIdsExist(mediaIds: string[]) {
+	if (!mediaIds.length) return true;
+
+	const count = await prisma.mediaAsset.count({
+		where: { id: { in: mediaIds }, kind: "IMAGE" },
+	});
+
+	return count === mediaIds.length;
+}
+
 function projectTechnologies(technologyIds: string[]) {
 	return technologyIds.map((technologyId, sortOrder) => ({ technologyId, sortOrder }));
+}
+
+function projectMedia(media: ReturnType<typeof projectFormSchema.parse>["projectMedia"]) {
+	let galleryOrder = 0;
+
+	return media.map((item) => ({
+		mediaId: item.mediaId,
+		role: item.role,
+		sortOrder: item.role === "COVER" ? 0 : galleryOrder++,
+		altPt: optionalValue(item.altPt),
+		altEn: optionalValue(item.altEn),
+	}));
 }
 
 export async function createProjectAction(_state: ProjectFormState, formData: FormData): Promise<ProjectFormState> {
@@ -81,6 +112,7 @@ export async function createProjectAction(_state: ProjectFormState, formData: Fo
 
 	if (!result.success) return {error: "Revise os campos destacados antes de salvar.", fieldErrors: result.error.flatten().fieldErrors};
 	if (!(await technologyIdsExist(result.data.technologyIds))) return { error: "Uma ou mais tecnologias selecionadas não existem.", fieldErrors: { technologyIds: ["Atualize a seleção de stacks."] } };
+	if (!(await mediaIdsExist(result.data.projectMedia.map(({ mediaId }) => mediaId)))) return { error: "Uma ou mais imagens selecionadas não existem.", fieldErrors: { projectMedia: ["Atualize a seleção de mídias."] } };
 
 	const existingProject = await prisma.project.findUnique({
 		where: { slug: result.data.slug },
@@ -89,7 +121,7 @@ export async function createProjectAction(_state: ProjectFormState, formData: Fo
 
 	if (existingProject) return {error: "Já existe um projeto com esse slug.", fieldErrors: { slug: ["Escolha outro slug."] }};
 
-	const project = await prisma.project.create({
+	await prisma.project.create({
 		data: {
 			slug: result.data.slug,
 			status: result.data.status,
@@ -106,6 +138,9 @@ export async function createProjectAction(_state: ProjectFormState, formData: Fo
 			technologies: {
 				create: projectTechnologies(result.data.technologyIds),
 			},
+			media: {
+				create: projectMedia(result.data.projectMedia),
+			}
 		},
 		select: { id: true }
 	});
@@ -113,6 +148,7 @@ export async function createProjectAction(_state: ProjectFormState, formData: Fo
 	revalidatePath("/admin");
 	revalidatePath("/admin/projetos");
 	revalidatePath("/admin/stacks");
+	revalidatePath("/admin/midia");
 	redirect(`/admin/projetos`);
 }
 
@@ -121,6 +157,8 @@ export async function updateProjectAction(projectId: string, _state: ProjectForm
 	const result = parseProjectForm(formData);
 
 	if (!result.success) return {error: "Revise os campos destacados antes de salvar.", fieldErrors: result.error.flatten().fieldErrors};
+	if (!(await technologyIdsExist(result.data.technologyIds))) return { error: "Uma ou mais tecnologias selecionadas não existem.", fieldErrors: { technologyIds: ["Atualize a seleção de stacks."] } };
+	if (!(await mediaIdsExist(result.data.projectMedia.map(({ mediaId }) => mediaId)))) return { error: "Uma ou mais imagens selecionadas não existem.", fieldErrors: { projectMedia: ["Atualize a seleção de mídias."] } };
 
 	const [project, conflictingSlug] = await Promise.all([
 		prisma.project.findUnique({
@@ -161,7 +199,11 @@ export async function updateProjectAction(projectId: string, _state: ProjectForm
 			technologies: {
 				deleteMany: {},
 				create: projectTechnologies(result.data.technologyIds),
-			}
+			},
+			media: {
+				deleteMany: {},
+				create: projectMedia(result.data.projectMedia),
+			},
 		},
 	});
 
@@ -169,6 +211,7 @@ export async function updateProjectAction(projectId: string, _state: ProjectForm
 	revalidatePath("/admin/projetos");
 	revalidatePath(`/admin/projetos/${projectId}`);
 	revalidatePath("/admin/stacks");
+	revalidatePath("/admin/midia");
 	redirect("/admin/projetos");
 }
 

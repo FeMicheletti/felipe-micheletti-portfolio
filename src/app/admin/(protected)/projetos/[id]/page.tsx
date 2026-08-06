@@ -9,7 +9,7 @@ function dateInputValue(date: Date | null) {
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }>; }) {
 	const { id } = await params;
-	const [project, technologyCategories] = await Promise.all([
+	const [project, technologyCategories, mediaAssets] = await Promise.all([
 		prisma.project.findUnique({
 			where: { id },
 			include: {
@@ -17,6 +17,10 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
 				technologies: {
 					orderBy: { sortOrder: "asc" },
 					select: { technologyId: true },
+				},
+				media: {
+					orderBy: [{ role: "asc" }, { sortOrder: "asc" }],
+					select: { mediaId: true, role: true, altPt: true, altEn: true },
 				},
 			},
 		}),
@@ -32,6 +36,11 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
 					select: { id: true, name: true, slug: true, color: true, visible: true },
 				},
 			},
+		}),
+		prisma.mediaAsset.findMany({
+			where: { kind: "IMAGE" },
+			orderBy: { createdAt: "desc" },
+			select: { id: true, fileName: true },
 		}),
 	]);
 
@@ -65,12 +74,18 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
 		technicalChoicesEn: en?.technicalChoices ?? "",
 		resultsEn: en?.results ?? "",
 		technologyIds: project.technologies.map(({ technologyId }) => technologyId),
+		projectMedia: project.media.map((item) => ({
+			mediaId: item.mediaId,
+			role: item.role,
+			altPt: item.altPt ?? "",
+			altEn: item.altEn ?? "",
+		}))
 	};
 
 	return (
 		<div>
 			<ProjectFormHeading editing />
-			<ProjectForm values={values} technologyCategories={technologyCategories} />
+			<ProjectForm values={values} technologyCategories={technologyCategories} mediaAssets={mediaAssets} />
 		</div>
 	);
 }

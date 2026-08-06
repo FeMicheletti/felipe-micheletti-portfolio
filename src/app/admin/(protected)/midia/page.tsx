@@ -66,7 +66,7 @@ export default async function MediaPage() {
 
 			{mediaAssets.length ? (
 				<section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-					{mediaAssets.map((asset) => {
+					{mediaAssets.map((asset, index) => {
 						const references = asset._count.projectMedia + asset._count.resumes + asset._count.heroSettings;
 
 						return (
@@ -78,6 +78,7 @@ export default async function MediaPage() {
 											alt={asset.fileName}
 											fill
 											unoptimized
+											loading={index < 3 ? "eager" : "lazy"}
 											className="object-cover" />
 									) : (
 										<FileText className="size-12 text-violet-300/60" />
