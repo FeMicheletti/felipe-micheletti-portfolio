@@ -9,10 +9,31 @@ function dateInputValue(date: Date | null) {
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }>; }) {
 	const { id } = await params;
-	const project = await prisma.project.findUnique({
-		where: { id },
-		include: { translations: true },
-	});
+	const [project, technologyCategories] = await Promise.all([
+		prisma.project.findUnique({
+			where: { id },
+			include: {
+				translations: true,
+				technologies: {
+					orderBy: { sortOrder: "asc" },
+					select: { technologyId: true },
+				},
+			},
+		}),
+		prisma.technologyCategory.findMany({
+			orderBy: [{ sortOrder: "asc" }, { namePt: "asc" }],
+			select: {
+				id: true,
+				namePt: true,
+				nameEn: true,
+				visible: true,
+				technologies: {
+					orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+					select: { id: true, name: true, slug: true, color: true, visible: true },
+				},
+			},
+		}),
+	]);
 
 	if (!project) notFound();
 
@@ -43,12 +64,13 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
 		responsibilitiesEn: en?.responsibilities ?? "",
 		technicalChoicesEn: en?.technicalChoices ?? "",
 		resultsEn: en?.results ?? "",
+		technologyIds: project.technologies.map(({ technologyId }) => technologyId),
 	};
 
 	return (
 		<div>
 			<ProjectFormHeading editing />
-			<ProjectForm values={values} />
+			<ProjectForm values={values} technologyCategories={technologyCategories} />
 		</div>
 	);
 }

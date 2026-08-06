@@ -47,6 +47,7 @@ export const projectFormSchema = z.object({
     responsibilitiesEn: z.string().trim(),
     technicalChoicesEn: z.string().trim(),
     resultsEn: z.string().trim(),
+	technologyIds: z.array(z.string().trim().min(1)).max(50, "Selecione no máximo 50 tecnologias.")
 }).superRefine((data, context) => {
     if (data.startedAt && data.finishedAt && data.finishedAt < data.startedAt) {
 		context.addIssue({
@@ -86,4 +87,5 @@ export type ProjectFormValues = {
 	responsibilitiesEn: string;
 	technicalChoicesEn: string;
 	resultsEn: string;
+	technologyIds: string[];
 };
