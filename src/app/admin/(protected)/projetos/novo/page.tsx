@@ -1,10 +1,26 @@
 import { ProjectForm, ProjectFormHeading } from "@/components/admin/project-form";
+import { prisma } from "@/lib/prisma";
 
-export default function NewProjectPage() {
+export default async function NewProjectPage() {
+	const technologyCategories = await prisma.technologyCategory.findMany({
+		orderBy: [{ sortOrder: "asc" }, { namePt: "asc" }],
+		select: {
+			id: true,
+			namePt: true,
+			nameEn: true,
+			visible: true,
+			technologies: {
+				orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+				select: { id: true, name: true, slug: true, color: true, visible: true },
+			},
+		},
+	});
+
 	return (
 		<div>
 			<ProjectFormHeading editing={false} />
 			<ProjectForm
+				technologyCategories={technologyCategories}
 				values={{
 					slug: "",
 					status: "DRAFT",
@@ -27,8 +43,10 @@ export default function NewProjectPage() {
 					solutionEn: "",
 					responsibilitiesEn: "",
 					technicalChoicesEn: "",
-					resultsEn: ""
-				}} />
+					resultsEn: "",
+					technologyIds: [],
+				}}
+			/>
 		</div>
 	);
 }
