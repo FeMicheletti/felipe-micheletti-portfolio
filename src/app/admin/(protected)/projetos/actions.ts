@@ -42,6 +42,7 @@ function parseProjectForm(formData: FormData) {
 		responsibilitiesEn: value(formData, "responsibilitiesEn"),
 		technicalChoicesEn: value(formData, "technicalChoicesEn"),
 		resultsEn: value(formData, "resultsEn"),
+		technologyIds: [...new Set(formData.getAll("technologyIds").map(String))],
 	});
 }
 
@@ -60,11 +61,31 @@ function translation(data: ReturnType<typeof projectFormSchema.parse>, locale: "
 	};
 }
 
+async function technologyIdsExist(technologyIds: string[]) {
+	if (!technologyIds.length) return true;
+
+	const count = await prisma.technology.count({
+		where: { id: { in: technologyIds } },
+	});
+
+	return count === technologyIds.length;
+}
+
+function projectTechnologies(technologyIds: string[]) {
+	return technologyIds.map((technologyId, sortOrder) => ({
+		technologyId,
+		sortOrder,
+	}));
+}
+
 export async function createProjectAction(_state: ProjectFormState, formData: FormData): Promise<ProjectFormState> {
 	await requireAdmin();
 	const result = parseProjectForm(formData);
 
 	if (!result.success) return {error: "Revise os campos destacados antes de salvar.", fieldErrors: result.error.flatten().fieldErrors};
+	if (!(await technologyIdsExist(result.data.technologyIds))) {
+		return { error: "Uma ou mais tecnologias selecionadas não existem.", fieldErrors: { technologyIds: ["Atualize a seleção de stacks."] } };
+	}
 
 	const existingProject = await prisma.project.findUnique({
 		where: { slug: result.data.slug },
@@ -87,12 +108,16 @@ export async function createProjectAction(_state: ProjectFormState, formData: Fo
 			translations: {
 				create: [translation(result.data, "PT_BR"), translation(result.data, "EN_US")]
 			},
+			technologies: {
+				create: projectTechnologies(result.data.technologyIds),
+			},
 		},
 		select: { id: true }
 	});
 
 	revalidatePath("/admin");
 	revalidatePath("/admin/projetos");
+	revalidatePath("/admin/stacks");
 	redirect(`/admin/projetos`);
 }
 
@@ -101,6 +126,9 @@ export async function updateProjectAction(projectId: string, _state: ProjectForm
 	const result = parseProjectForm(formData);
 
 	if (!result.success) return {error: "Revise os campos destacados antes de salvar.", fieldErrors: result.error.flatten().fieldErrors};
+	if (!(await technologyIdsExist(result.data.technologyIds))) {
+		return { error: "Uma ou mais tecnologias selecionadas não existem.", fieldErrors: { technologyIds: ["Atualize a seleção de stacks."] } };
+	}
 
 	const [project, conflictingSlug] = await Promise.all([
 		prisma.project.findUnique({
@@ -138,12 +166,17 @@ export async function updateProjectAction(projectId: string, _state: ProjectForm
 					};
 				}),
 			},
+			technologies: {
+				deleteMany: {},
+				create: projectTechnologies(result.data.technologyIds),
+			},
 		},
 	});
 
 	revalidatePath("/admin");
 	revalidatePath("/admin/projetos");
 	revalidatePath(`/admin/projetos/${projectId}`);
+	revalidatePath("/admin/stacks");
 	redirect("/admin/projetos");
 }
 
