@@ -93,7 +93,7 @@ export async function createProjectAction(_state: ProjectFormState, formData: Fo
 
 	revalidatePath("/admin");
 	revalidatePath("/admin/projetos");
-	redirect(`/admin/projetos/${project.id}`);
+	redirect(`/admin/projetos`);
 }
 
 export async function updateProjectAction(projectId: string, _state: ProjectFormState, formData: FormData): Promise<ProjectFormState> {
