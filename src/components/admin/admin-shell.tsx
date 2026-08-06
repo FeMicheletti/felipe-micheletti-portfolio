@@ -21,7 +21,7 @@ const navigation = [
 	{ label: "Dashboard", href: "/admin", icon: Gauge, available: true },
 	{ label: "Projetos", href: "/admin/projetos", icon: BriefcaseBusiness, available: true },
 	{ label: "Stacks", href: "/admin/stacks", icon: Layers3, available: true },
-	{ label: "Mídia", href: "/admin/midia", icon: Image, available: false },
+	{ label: "Mídia", href: "/admin/midia", icon: Image, available: true },
 	{ label: "Métricas", href: "/admin/metricas", icon: BarChart3, available: false },
 	{ label: "Configurações", href: "/admin/configuracoes", icon: Settings, available: false },
 ] as const;
